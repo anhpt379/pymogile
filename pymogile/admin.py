@@ -113,7 +113,10 @@ class Admin(object):
     """
     if self.readonly:
       return False
-    res = self.backend.do_request('delete_domain', {'domain': domain})
+    try:
+      res = self.backend.do_request('delete_domain', {'domain': domain})
+    except MogileFSTrackerError:
+      return False
     if res['domain'] == domain:
       return True
     else:
@@ -123,11 +126,7 @@ class Admin(object):
     """
     create a class within a domain
     """
-    try:
-      return self._modify_class('create', domain, cls, mindevcount)
-    except MogileFSTrackerError, e:
-      if e.err != 'class_exists':
-        raise e
+    return self._modify_class('create', domain, cls, mindevcount)
 
   def update_class(self, domain, cls, mindevcount):
     """
@@ -336,7 +335,6 @@ class Admin(object):
     if not res:
       return
     ret = {}
-    print res
     for x in xrange(1, int(res["key_count"]) + 1):
       key = res.get("key_%d" % x, '')
       value = res.get("value_%d" % x, '')
@@ -348,8 +346,9 @@ class Admin(object):
       return False
     params = {'domain': domain, 
               'class': cls, 
-              'mindevcount': mindevcount,
-              'replpolicy': replpolicy}
+              'mindevcount': mindevcount}
+    if replpolicy:
+      params['replpolicy'] = replpolicy
     res = self.backend.do_request("%s_class" % verb, params)
     if res['class'] == cls:
       return True
@@ -359,7 +358,10 @@ class Admin(object):
   def _modify_host(self, verb, params):
     if self.readonly:
       return False
-    return self.backend.do_request("%s_host" % verb, params)
+    try:
+      return self.backend.do_request("%s_host" % verb, params)
+    except MogileFSTrackerError:
+      return False
   
   ## Extra 
   #

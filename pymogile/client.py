@@ -39,7 +39,7 @@ class Client(object):
     Returns a tuple of (ip, port), representing the last mogilefsd
     'tracker' server which was talked to.
     """
-    return self.backend.get_last_tracker()
+    return self.backend.last_host_connected
 
   def new_file(self, key, cls=None, largefile=False, content_length=0,
                create_open_arg=None, create_close_arg=None, opts=None):
@@ -155,7 +155,7 @@ class Client(object):
       params['class'] = cls
     params[key] = key
 
-    self.run_hook('store_file_start', key, cls, params)
+    self.run_hook('store_file_start', params)
 
     try:
       new_file = self.new_file(key, cls, params)
@@ -187,10 +187,8 @@ class Client(object):
     self.run_hook('store_content_start', key, cls, opts)
 
     output = self.new_file(key, cls, None, **opts)
-    try:
-      output.write(content)
-    finally:
-      output.close()
+    output.write(content)
+    output.close()
 
     self.run_hook('store_content_end', key, cls, opts)
 
