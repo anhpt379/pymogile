@@ -1,5 +1,5 @@
 #! coding: utf-8
-# pylint: disable-msg=W0311, E1101
+# pylint: disable-msg=W0311
 """
 implement from description of MogileFS-Client version 1.13
 http://search.cpan.org/~dormando/MogileFS-Client/lib/MogileFS/Client.pm

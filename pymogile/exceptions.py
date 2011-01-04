@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+#! coding: utf-8
+# pylint: disable-msg=W0311
 
 __all__ = ['MogileFSError', 'MogileFSHTTPError', 'MogileFSTrackerError']
 

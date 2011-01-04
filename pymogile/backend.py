@@ -1,15 +1,18 @@
-# -*- coding: utf-8 -*-
+#! coding: utf-8
+# pylint: disable-msg=W0311
 import re
-import logging
+import time
 import select
 import socket
 import signal
 import random
-import time
 import urllib
+import logging
+from cgi import parse_qs
 from errno import EINPROGRESS, EISCONN
 
 from pymogile.exceptions import MogileFSTrackerError
+
 
 logger = logging.getLogger('mogilefs.backend')
 
@@ -20,10 +23,10 @@ FLAG_NOSIGNAL = MSG_NOSIGNAL
 ERR_RE = re.compile(r'^ERR\s+(\w+)\s*(\S*)')
 OK_RE = re.compile(r'^OK\s+\d*\s*(\S*)')
 
+
 def _encode_url_string(args):
   if not args:
     return ''
-
   buf = []
   for k, v in args.items():
     buf.append('%s=%s' % (urllib.quote_plus(str(k)),
@@ -31,7 +34,6 @@ def _encode_url_string(args):
   return '&'.join(buf)
 
 def _decode_url_string(arg):
-  from cgi import parse_qs
   params = {}
   for k, values in parse_qs(arg).items():
     params[k] = values[0]
@@ -39,15 +41,15 @@ def _decode_url_string(arg):
 
 
 class Backend(object):
-  def __init__(self, hosts, timeout=None):
+  def __init__(self, trackers, timeout=None):
     self.last_host_connected = None
     self._hosts = []
     self._sock_cache = None
-    for host in hosts:
+    for tracker in trackers:
       try:
-        addr, port = host.split(':', 1)
+        addr, port = tracker.split(':', 1)
       except ValueError:
-        raise ValueError("hosts argument must be of form: 'host:port'")
+        raise ValueError("trackers argument must be of form: 'tracker:port'")
 
       try:
         port = int(port)
@@ -165,26 +167,25 @@ class Backend(object):
   def add_hook(self, hookname, *args):
     pass
 
-  def _sock_to_host(self, host):
+  def _sock_to_host(self, tracker):
     # try preferred ips
-    if host[0] in self._pref_ip:
-      prefip = self._pref_ip[host[0]]
-      logger.debug("using preferred ip %s over %s" % (host[0],
-                              prefip))
+    if tracker[0] in self._pref_ip:
+      prefip = self._pref_ip[tracker[0]]
+      logger.debug("using preferred ip %s over %s" % (tracker[0], prefip))
       sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, PROTO_TCP)
-      prefhost = (prefip, host[1])
+      prefhost = (prefip, tracker[1])
       if self._connect_sock(sock, prefhost, 0.1):
         self.last_host_connected = prefhost
         # successfully connected so return this socket
         return sock
       else:
-        logger.debug("failed connect to preferred host %s" % str(prefhost))
+        logger.debug("failed connect to preferred tracker %s" % str(prefhost))
         sock.close()
 
     # now try the original ip
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, PROTO_TCP)
-    if self._connect_sock(sock, host):
-      self.last_host_connected = host
+    if self._connect_sock(sock, tracker):
+      self.last_host_connected = tracker
       return sock
     else:
       return None
@@ -228,22 +229,18 @@ class Backend(object):
     now = time.time()
 
     for _ in xrange(1, tries + 1):
-      host = self._hosts[idx % size]
+      tracker = self._hosts[idx % size]
       idx += 1
-
-      # try dead hosts every 5 seconds
-      if host in self._host_dead:
-        if self._host_dead[host] > now - 5:
+      # try dead trackers every 5 seconds
+      if tracker in self._host_dead:
+        if self._host_dead[tracker] > now - 5:
           continue
-
-      sock = self._sock_to_host(host)
+      sock = self._sock_to_host(tracker)
       if sock:
         break
-
       # mark sock as dead
-      logger.debug("marking host dead: %s @ %d" % (host, now))
-      self._host_dead[host] = now
+      logger.debug("marking tracker dead: %s @ %d" % (tracker, now))
+      self._host_dead[tracker] = now
     else:
       sock = None
-
     return sock
