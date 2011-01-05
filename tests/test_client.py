@@ -4,7 +4,7 @@ import time
 import random
 import unittest
 from cStringIO import StringIO
-from pymogile import Client, Admin, MogileFSTrackerError as MogileFSError
+from pymogile import Client, Admin, MogileFSTrackerError
 
 TEST_NS = "mogilefs.client::test_client"
 HOSTS   = ["127.0.0.1:7001"]
@@ -14,11 +14,13 @@ class TestClient(unittest.TestCase):
     self.moga = Admin(HOSTS)
     try:
       self.moga.create_domain(TEST_NS)
-    except:
+    except MogileFSTrackerError:
       pass
   
   def tearDown(self):
-      #moga.delete_domain(TEST_NS)
+    try:
+      self.moga.delete_domain(TEST_NS)
+    except MogileFSTrackerError:
       pass
   
   def test_sleep(self):
@@ -49,170 +51,151 @@ class TestClient(unittest.TestCase):
       self.moga.delete_domain(domain)
 
   def test_new_file(self):
-      client = Client(TEST_NS, HOSTS)
-  
-      key = 'test_file_%s_%s' % (random.random(), time.time())
-      fp = client.new_file(key)
-      assert fp is not None
-  
-      data = "0123456789" * 50
-      fp.write(data)
-      fp.close()
-  
-      paths = client.get_paths(key)
-      #assert len(paths) > 1, "should exist in one ore more places"
-      assert paths
-  
-      content = client.get_file_data(key)
-      assert content == data
-  
-  def test_new_large_file(self):
-      client = Client(TEST_NS, HOSTS)
-  
-      key = 'test_file_%s_%s' % (random.random(), time.time())
-      fp = client.new_file(key, largefile=True)
-      assert fp is not None
-  
-      for _ in xrange(50):
-        fp.write("0123456789")
-      fp.close()
-  
-      paths = client.get_paths(key)
-      #assert len(paths) > 1, "should exist in one ore more places"
-      assert paths
-  
-      content = client.get_file_data(key)
-      assert content == "0123456789" * 50
+    client = Client(TEST_NS, HOSTS)
+
+    key = 'test_file_%s_%s' % (random.random(), time.time())
+    fp = client.new_file(key)
+    assert fp is not None
+
+    data = "0123456789" * 50
+    fp.write(data)
+    fp.close()
+
+    paths = client.get_paths(key)
+    #assert len(paths) > 1, "should exist in one ore more places"
+    assert paths
+
+    content = client.get_file_data(key)
+    assert content == data
+#  
+#  def test_new_large_file(self):
+#    client = Client(TEST_NS, HOSTS)
+#
+#    key = 'test_file_%s_%s' % (random.random(), time.time())
+#    fp = client.new_file(key, largefile=True)
+#    assert fp is not None
+#
+#    for _ in xrange(50):
+#      fp.write("0123456789")
+#    fp.close()
+#
+#    paths = client.get_paths(key)
+#    #assert len(paths) > 1, "should exist in one ore more places"
+#    assert paths
+#
+#    content = client.get_file_data(key)
+#    assert content == "0123456789" * 50
   
   def test_new_file_unexisting_class(self):
-    def func(largefile):
-      client = Client(TEST_NS, HOSTS)
+    client = Client(TEST_NS, HOSTS)
 
-      key = 'test_file_%s_%s' % (random.random(), time.time())
-      try:
-          fp = client.new_file(key, cls='spam')
-      except MogileFSError:
-          pass
-      else:
-          assert False
+    key = 'test_file_%s_%s' % (random.random(), time.time())
+    try:
+      client.new_file(key, cls='spam')
+    except MogileFSTrackerError:
+      pass
+    else:
+      assert False
 
-    for largefile in (True, False):
-        yield func, largefile
   
   def test_new_file_unexisting_domain(self):
-      def func(largefile):
-          client = Client('spamdomain', HOSTS)
-  
-          key = 'test_file_%s_%s' % (random.random(), time.time())
-          try:
-              fp = client.new_file(key)
-          except MogileFSError, e:
-              pass
-          else:
-              assert False
-  
-      for largefile in (True, False):
-          yield func, largefile
+    client = Client('spamdomain', HOSTS)
+
+    key = 'test_file_%s_%s' % (random.random(), time.time())
+    try:
+      client.new_file(key)
+    except MogileFSTrackerError, e:
+      pass
+    else:
+      assert False
   
   def test_closed_file(self):
-      def func(largefile):
-          client = Client(TEST_NS, HOSTS)
-          key = 'test_file_%s_%s' % (random.random(), time.time())
-          fp = client.new_file(key, largefile=largefile)
-          fp.write("spam")
-          fp.close()
+    client = Client(TEST_NS, HOSTS)
+    key = 'test_file_%s_%s' % (random.random(), time.time())
+    fp = client.new_file(key)
+    fp.write("spam")
+    fp.close()
+
+    try:
+      fp.write("egg")
+    except:
+      pass
+    else:
+      assert False, "operation not permitted to closed file"
+
+    try:
+      fp.read()
+    except:
+      pass
+    else:
+      assert False, "operation not permitted to closed file"
+
+    try:
+      fp.seek(0)
+    except:
+      pass
+    else:
+      assert False, "operation not permitted to closed file"
+
+    try:
+      fp.tell()
+    except:
+      pass
+    else:
+      assert False, "operation not permitted to closed file"
   
-          try:
-              fp.write("egg")
-          except:
-              pass
-          else:
-              assert False, "operation not permitted to closed file"
-  
-          try:
-              fp.read()
-          except:
-              pass
-          else:
-              assert False, "operation not permitted to closed file"
-  
-          try:
-              fp.seek(0)
-          except:
-              pass
-          else:
-              assert False, "operation not permitted to closed file"
-  
-          try:
-              fp.tell()
-          except:
-              pass
-          else:
-              assert False, "operation not permitted to closed file"
-  
-      for largefile in (False, True):
-          yield func, largefile
-  
-  def test_readonly_file(self):
-      client = Client(TEST_NS, HOSTS)
-      key = 'test_file_%s_%s' % (random.random(), time.time())
-      client.store_content(key, "SPAM")
-  
-      fp = client.read_file(key)
-      try:
-          fp.write("egg")
-      except:
-          pass
-      else:
-          assert False, "operation not permitted to read-only file"
+#  def test_readonly_file(self):
+#    client = Client(TEST_NS, HOSTS)
+#    key = 'test_file_%s_%s' % (random.random(), time.time())
+#    client.store_content(key, "SPAM")
+#
+#    fp = client.read_file(key)
+#    try:
+#      fp.write("egg")
+#    except:
+#      pass
+#    else:
+#      assert False, "operation not permitted to read-only file"
   
   def test_seek(self):
-      def func(largefile):
-          client = Client(TEST_NS, HOSTS)
-          key = 'test_file_%s_%s' % (random.random(), time.time())
-  
-          fp = client.new_file(key, largefile=largefile)
-          fp.write("SPAM")
-          fp.seek(1)
-          assert fp.tell() == 1
-          fp.write("p")
-          fp.close()
-  
-          assert client.get_file_data(key) == "SpAM"
-  
-      for largefile in (False, True):
-          yield func, largefile
+    client = Client(TEST_NS, HOSTS)
+    key = 'test_file_%s_%s' % (random.random(), time.time())
+
+    fp = client.new_file(key)
+    fp.write("SPAM")
+    fp.seek(1)
+    assert fp.tell() == 1
+    fp.write("p")
+    fp.close()
+
+    assert client.get_file_data(key) == "SpAM"
   
   def test_seek_negative(self):
-      def func(largefile):
-          client = Client(TEST_NS, HOSTS)
-          key = 'test_file_%s_%s' % (random.random(), time.time())
-  
-          fp = client.new_file(key, largefile=largefile)
-          fp.write("SPAM")
-          fp.seek(-10)
-          assert fp.tell() == 0
-          fp.write("s")
-          fp.close()
-  
-          assert client.get_file_data(key) == "sPAM"
-  
-      for largefile in (False, True):
-          yield func, largefile
+    client = Client(TEST_NS, HOSTS)
+    key = 'test_file_%s_%s' % (random.random(), time.time())
+
+    fp = client.new_file(key)
+    fp.write("SPAM")
+    fp.seek(-10)
+    assert fp.tell() == 0
+    fp.write("s")
+    fp.close()
+
+    assert client.get_file_data(key) == "sPAM"
   
   def test_seek_read(self):
-      client = Client(TEST_NS, HOSTS)
-      key = 'test_file_%s_%s' % (random.random(), time.time())
-  
-      client.store_content(key, "0123456789")
-  
-      fp = client.read_file(key)
-      fp.seek(1)
-      assert fp.tell() == 1
-      content = fp.read(3)
-  
-      assert content == "123"
-      assert fp.tell() == 4
+    client = Client(TEST_NS, HOSTS)
+    key = 'test_file_%s_%s' % (random.random(), time.time())
+
+    client.store_content(key, "0123456789")
+
+    fp = client.read_file(key)
+    fp.seek(1)
+    assert fp.tell() == 1
+    content = fp.read(3)
+
+    assert content == "123"
+    assert fp.tell() == 4
   
 
   def test_rename(self): 
@@ -246,9 +229,9 @@ class TestClient(unittest.TestCase):
     client = Client(TEST_NS, HOSTS)
     key = 'test_file_%s_%s' % (random.random(), time.time())
 
-    data = ''.join(random.choice("0123456789") for x in xrange(8192 * 2))
-    input = StringIO(data)
-    length = client.store_file(key, input)
+    data = ''.join(random.choice("0123456789") for _ in xrange(8192 * 2))
+    fp = StringIO(data)
+    length = client.store_file(key, fp)
     assert length == len(data)
 
     content = client.get_file_data(key)
@@ -259,7 +242,7 @@ class TestClient(unittest.TestCase):
     client = Client(TEST_NS, HOSTS)
     key = 'test_file_%s_%s' % (random.random(), time.time())
 
-    data = ''.join(random.choice("0123456789") for x in xrange(8192 * 2))
+    data = ''.join(random.choice("0123456789") for _ in xrange(8192 * 2))
     length = client.store_content(key, data)
     assert length == len(data)
 
@@ -299,54 +282,46 @@ class TestClient(unittest.TestCase):
       assert paths
 
 
-  def test_edit_file(self): 
-      # TODO
-      # PASS
-      return
-  
-      cl = Client(TEST_NS, HOSTS)
-      key = 'test_file_%s_%s' % (random.random(), time.time())
-  
-      cl.store_content(key, "SPAM")
-      assert cl.get_paths(key)
-      assert cl.get_file_data(key) == "SPAM"
-  
-      fp = cl.edit_file(key)
-      assert fp
-      fp.write("s")
-      fp.seek(2)
-      fp.write("a")
-      fp.close()
-  
-      assert cl.get_file_data(key) == "sPaM"
+#  def test_edit_file(self): 
+#    cl = Client(TEST_NS, HOSTS)
+#    key = 'test_file_%s_%s' % (random.random(), time.time())
+#
+#    cl.store_content(key, "SPAM")
+#    assert cl.get_paths(key)
+#    assert cl.get_file_data(key) == "SPAM"
+#
+#    fp = cl.edit_file(key)
+#    assert fp
+#    fp.write("s")
+#    fp.seek(2)
+#    fp.write("a")
+#    fp.close()
+#
+#    assert cl.get_file_data(key) == "sPaM"
   
 
   def test_file_like_object(self): 
-    def func(largefile):
-      client = Client(TEST_NS, HOSTS)
-      key = 'test_file_%s_%s' % (random.random(), time.time())
+    client = Client(TEST_NS, HOSTS)
+    key = 'test_file_%s_%s' % (random.random(), time.time())
 
-      fp = client.new_file(key, largefile=largefile)
-      fp.write("spam\negg\nham\n")
+    fp = client.new_file(key)
+    fp.write("spam\negg\nham\n")
 
-      fp.seek(0)
-      line = fp.readline()
-      assert line == "spam\n"
-      line = fp.readline()
-      assert line == "egg\n"
-      line = fp.readline()
-      assert line == "ham\n"
-      line = fp.readline()
-      assert line == ''
+    fp.seek(0)
+    line = fp.readline()
+    assert line == "spam\n"
+    line = fp.readline()
+    assert line == "egg\n"
+    line = fp.readline()
+    assert line == "ham\n"
+    line = fp.readline()
+    assert line == ''
 
-      fp.seek(0)
-      lines = fp.readlines()
-      assert lines == ["spam\n", "egg\n", "ham\n"]
+    fp.seek(0)
+    lines = fp.readlines()
+    assert lines == ["spam\n", "egg\n", "ham\n"]
 
-      fp.close()
-
-    for largefile in (False, True):
-      yield func, largefile
+    fp.close()
           
 if __name__ == "__main__":
   unittest.main()

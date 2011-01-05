@@ -120,7 +120,7 @@ class Client(object):
     By default, the file contents are preserved on open, but you may specify the overwrite option to zero the file first. 
     The seek position is at the beginning of the file, but you may seek to the end to append.
     """
-    pass
+    raise NotImplementedError()
 
   def read_file(self, key):
     """
@@ -158,7 +158,7 @@ class Client(object):
     self.run_hook('store_file_start', params)
 
     try:
-      new_file = self.new_file(key, cls, params)
+      new_file = self.new_file(key, cls)
       _bytes = 0
       while True:
         buf = fp.read(chunk_size)
@@ -236,7 +236,7 @@ class Client(object):
         return False
       self.backend.do_request('delete', {'domain': self.domain, 'key': key})
       return True
-    except (MogileFSError, MogileFSTrackerError):
+    except MogileFSTrackerError:
       return False
 
   def rename(self, from_key, to_key):
@@ -252,7 +252,7 @@ class Client(object):
                  'to_key': to_key}
       self.backend.do_request('rename', params)
       return True
-    except (MogileFSError, MogileFSTrackerError):
+    except MogileFSTrackerError:
       return False
 
   def list_keys(self, prefix=None, after=None, limit=None):
@@ -309,7 +309,7 @@ class Client(object):
                 "class": new_class}
       res = self.backend.do_request("updateclass", params)
       return res
-    except (MogileFSError, MogileFSTrackerError):
+    except MogileFSTrackerError:
       return False
 
   def sleep(self, duration):
@@ -320,7 +320,7 @@ class Client(object):
     try:
       self.backend.do_request("sleep", {'duration': duration})
       return True
-    except (MogileFSError, MogileFSTrackerError):
+    except MogileFSTrackerError:
       return False
 
   def set_pref_ip(self, *ips):

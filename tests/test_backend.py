@@ -1,38 +1,46 @@
-# -*- coding: utf-8 -*-
+#! coding: utf-8
+# pylint: disable-msg=W0311
+import unittest
 from pymogile.backend import Backend
-from pymogile.exceptions import MogileFSError
+from pymogile.exceptions import MogileFSTrackerError
 
-def get_backend():
-    return Backend(["127.0.0.1:7001"])
 
-def test_do_request_host_not_exist():
+class TestBackend(unittest.TestCase):
+  def setUp(self):
+    self.backend = Backend(['127.0.0.1:7001'])
+  
+  def test_do_request_host_not_exist(self):
     backend = Backend(["127.0.0.1:7011", "127.0.0.1:7012"])
     try:
-        backend.do_request("get_domains")
-    except MogileFSError:
-        pass
+      backend.do_request("get_domains")
+    except MogileFSTrackerError:
+      pass
     else:
-        assert False
+      assert False
 
-def test_do_request():
-    backend = get_backend()
-    res = backend.do_request("get_domains")
-
-def test_do_request_cmd_not_exist():
-    backend = get_backend()
+  def test_do_request(self):
+      res = self.backend.do_request("get_domains")
+      assert res
+  
+  def test_do_request_cmd_not_exist(self):
     try:
-        res = backend.do_request("spameggham")
-    except MogileFSError:
-        pass
-
-def test_do_request_with_no_cmd():
-    backend = get_backend()
+      self.backend.do_request("spameggham")
+    except MogileFSTrackerError:
+      pass
+    else:
+      assert False
+  
+  def test_do_request_with_no_cmd(self):
     try:
-        backend.do_request()
+      self.backend.do_request()   # pylint: disable-msg=E1120
     except TypeError:
-        pass
+      pass
     except Exception, e:
-        assert False, "TypeError expected, actual %r" % e
+      assert False, "TypeError expected, actual %r" % e
     else:
-        assert False
+      assert False
+          
+          
+if __name__ == "__main__":
+  unittest.main()
 

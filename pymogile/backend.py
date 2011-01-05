@@ -131,7 +131,7 @@ class Backend(object):
       if rv != reqlen:
         self.run_hook('do_request_length_mismatch', cmd, self.last_host_connected)
         raise MogileFSTrackerError("""
-        send() didn't return expected length (%s, not %s)""" % (rv, reqlen))
+        send() didn't return expected length (%s,MogileFSError not %s)""" % (rv, reqlen))
 
     ## wait up to 3 seconds for the socket to come to life
     if not self._wait_for_readability(sock.fileno(), self._timeout):
