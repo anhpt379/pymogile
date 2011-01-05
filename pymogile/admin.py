@@ -1,7 +1,7 @@
 #! coding: utf-8
 # pylint: disable-msg=W0311
 from pymogile.backend import Backend
-from pymogile.exceptions import MogileFSTrackerError
+from pymogile.exceptions import MogileFSError
 
 
 class Admin(object):
@@ -115,7 +115,7 @@ class Admin(object):
       return False
     try:
       res = self.backend.do_request('delete_domain', {'domain': domain})
-    except MogileFSTrackerError:
+    except MogileFSError:
       return False
     if res['domain'] == domain:
       return True
@@ -360,7 +360,7 @@ class Admin(object):
       return False
     try:
       return self.backend.do_request("%s_host" % verb, params)
-    except MogileFSTrackerError:
+    except MogileFSError:
       return False
   
   ## Extra 

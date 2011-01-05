@@ -2,7 +2,7 @@
 # pylint: disable-msg=W0311
 import unittest
 from pymogile.backend import Backend
-from pymogile.exceptions import MogileFSTrackerError
+from pymogile.exceptions import MogileFSError
 
 
 class TestBackend(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestBackend(unittest.TestCase):
     backend = Backend(["127.0.0.1:7011", "127.0.0.1:7012"])
     try:
       backend.do_request("get_domains")
-    except MogileFSTrackerError:
+    except MogileFSError:
       pass
     else:
       assert False
@@ -25,7 +25,7 @@ class TestBackend(unittest.TestCase):
   def test_do_request_cmd_not_exist(self):
     try:
       self.backend.do_request("spameggham")
-    except MogileFSTrackerError:
+    except MogileFSError:
       pass
     else:
       assert False

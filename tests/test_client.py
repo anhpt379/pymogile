@@ -4,7 +4,7 @@ import time
 import random
 import unittest
 from cStringIO import StringIO
-from pymogile import Client, Admin, MogileFSTrackerError
+from pymogile import Client, Admin, MogileFSError
 
 TEST_NS = "mogilefs.client::test_client"
 HOSTS   = ["127.0.0.1:7001"]
@@ -14,13 +14,13 @@ class TestClient(unittest.TestCase):
     self.moga = Admin(HOSTS)
     try:
       self.moga.create_domain(TEST_NS)
-    except MogileFSTrackerError:
+    except MogileFSError:
       pass
   
   def tearDown(self):
     try:
       self.moga.delete_domain(TEST_NS)
-    except MogileFSTrackerError:
+    except MogileFSError:
       pass
   
   def test_sleep(self):
@@ -92,7 +92,7 @@ class TestClient(unittest.TestCase):
     key = 'test_file_%s_%s' % (random.random(), time.time())
     try:
       client.new_file(key, cls='spam')
-    except MogileFSTrackerError:
+    except MogileFSError:
       pass
     else:
       assert False
@@ -104,7 +104,7 @@ class TestClient(unittest.TestCase):
     key = 'test_file_%s_%s' % (random.random(), time.time())
     try:
       client.new_file(key)
-    except MogileFSTrackerError, e:
+    except MogileFSError, e:
       pass
     else:
       assert False

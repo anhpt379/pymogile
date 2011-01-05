@@ -5,7 +5,7 @@ import httplib
 import urlparse
 from cStringIO import StringIO
 
-from pymogile.exceptions import MogileFSHTTPError, MogileFSTrackerError
+from pymogile.exceptions import MogileFSError, HTTPError
 
 
 def is_success(response):
@@ -80,7 +80,7 @@ class HttpFile(object):
         continue
       else:
         # unexpected status code while making directories
-        raise MogileFSHTTPError(res.status, res.reason)
+        raise HTTPError(res.status, res.reason)
 
     return created
 
@@ -111,7 +111,7 @@ class HttpFile(object):
         if is_success(res):
           return res
 
-    raise MogileFSHTTPError(res.status, res.reason)
+    raise HTTPError(res.status, res.reason)
 
 
 class ClientHttpFile(HttpFile):
@@ -143,7 +143,7 @@ class ClientHttpFile(HttpFile):
         self.path = tried_path
         break
     else:
-      raise MogileFSHTTPError("couldn't connect to any storage nodes")
+      raise HTTPError("couldn't connect to any storage nodes")
 
     self.overwrite = overwrite
     self.readonly = readonly
@@ -170,7 +170,7 @@ class ClientHttpFile(HttpFile):
 
     try:
       res = self._request(self._path, "GET", headers=headers)
-    except MogileFSHTTPError, e:
+    except HTTPError, e:
       if e.code == httplib.REQUESTED_RANGE_NOT_SATISFIABLE:
         self._eof = 1
         return ''
@@ -224,7 +224,7 @@ class ClientHttpFile(HttpFile):
           params.update(self.create_close_arg)
         try:
           self.mg.backend.do_request('create_close', params)
-        except MogileFSTrackerError, e:
+        except MogileFSError, e:
           if e.err != 'empty_file':
             raise
 
@@ -278,7 +278,7 @@ class NewHttpFile(HttpFile):
           devid = tried_devid
           path = tried_path
           break
-        except MogileFSHTTPError, e:
+        except HTTPError, e:
           continue
       else:
         devid = None
@@ -297,7 +297,7 @@ class NewHttpFile(HttpFile):
           params.update(self.create_close_arg)
         try:
           self.mg.backend.do_request('create_close', params)
-        except MogileFSTrackerError, e:
+        except MogileFSError, e:
           if e.err != 'empty_file':
             raise
 

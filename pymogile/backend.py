@@ -11,7 +11,7 @@ import logging
 from cgi import parse_qs
 from errno import EINPROGRESS, EISCONN
 
-from pymogile.exceptions import MogileFSTrackerError
+from pymogile.exceptions import MogileFSError
 
 
 logger = logging.getLogger('mogilefs.backend')
@@ -104,7 +104,7 @@ class Backend(object):
         if rv != reqlen:
           self.run_hook('do_request_length_mismatch', cmd,
                         self.last_host_connected)
-          raise MogileFSTrackerError("""
+          raise MogileFSError("""
           send() didn't return expected length (%s, not %s)""" % (rv, reqlen))
       except socket.error, e:
         self.run_hook('do_request_send_error', cmd, self.last_host_connected)
@@ -114,7 +114,7 @@ class Backend(object):
       ## may cause an exception
       sock = self._get_sock()
       if sock is None:
-        raise MogileFSTrackerError("""
+        raise MogileFSError("""
         couldn't connect to any mogilefs backends: %s""" % self._hosts)
 
       self.run_hook('do_request_start', cmd, self.last_host_connected)
@@ -125,19 +125,19 @@ class Backend(object):
         rv = sock.send(req, FLAG_NOSIGNAL)
       except socket.error, e:
         self.run_hook('do_request_send_error', cmd, self.last_host_connected)
-        raise MogileFSTrackerError("""
+        raise MogileFSError("""
         couldn't send command: [%s]. reason: %s""" % (req, e))
 
       if rv != reqlen:
         self.run_hook('do_request_length_mismatch', cmd, self.last_host_connected)
-        raise MogileFSTrackerError("""
+        raise MogileFSError("""
         send() didn't return expected length (%s,MogileFSError not %s)""" % (rv, reqlen))
 
     ## wait up to 3 seconds for the socket to come to life
     if not self._wait_for_readability(sock.fileno(), self._timeout):
       sock.close()
       self.run_hook('do_request_read_timeout', cmd, self.last_host_connected)
-      raise MogileFSTrackerError("""
+      raise MogileFSError("""
       tracker socket never became readable (%s) when sending command: [%s]""" \
                                             % (self.last_host_connected, req))
 
@@ -157,9 +157,9 @@ class Backend(object):
     if matcher:
       self.lasterr, self.lasterrstr = map(urllib.unquote_plus, matcher.groups())
       logger.debug("LASTERR: %s %s" % (self.lasterr, self.lasterrstr))
-      raise MogileFSTrackerError(self.lasterrstr, self.lasterr)
+      raise MogileFSError(self.lasterrstr, self.lasterr)
 
-    raise MogileFSTrackerError('invalid response from server: [%s]' % line)
+    raise MogileFSError('invalid response from server: [%s]' % line)
 
   def run_hook(self, hookname, *args):
     pass

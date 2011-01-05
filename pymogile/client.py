@@ -7,7 +7,7 @@ http://search.cpan.org/~dormando/MogileFS-Client/lib/MogileFS/Client.pm
 This module is a client library for the MogileFS distributed file system
 """
 from pymogile.backend import Backend
-from pymogile.exceptions import MogileFSError, MogileFSTrackerError
+from pymogile.exceptions import MogileFSError, MogileFSError
 from pymogile.http import NewHttpFile, ClientHttpFile
 
 class Client(object):
@@ -209,7 +209,7 @@ class Client(object):
     try:
       res = self.backend.do_request('get_paths', params)
       paths = [res["path%d" % x] for x in xrange(1, int(res["paths"]) + 1)]
-    except (MogileFSTrackerError, MogileFSError):
+    except (MogileFSError, MogileFSError):
       paths = []
 
     self.run_hook('get_paths_end', key)
@@ -236,7 +236,7 @@ class Client(object):
         return False
       self.backend.do_request('delete', {'domain': self.domain, 'key': key})
       return True
-    except MogileFSTrackerError:
+    except MogileFSError:
       return False
 
   def rename(self, from_key, to_key):
@@ -252,7 +252,7 @@ class Client(object):
                  'to_key': to_key}
       self.backend.do_request('rename', params)
       return True
-    except MogileFSTrackerError:
+    except MogileFSError:
       return False
 
   def list_keys(self, prefix=None, after=None, limit=None):
@@ -309,7 +309,7 @@ class Client(object):
                 "class": new_class}
       res = self.backend.do_request("updateclass", params)
       return res
-    except MogileFSTrackerError:
+    except MogileFSError:
       return False
 
   def sleep(self, duration):
@@ -320,7 +320,7 @@ class Client(object):
     try:
       self.backend.do_request("sleep", {'duration': duration})
       return True
-    except MogileFSTrackerError:
+    except MogileFSError:
       return False
 
   def set_pref_ip(self, *ips):

@@ -1,10 +1,9 @@
 from setuptools import setup, find_packages
-import sys, os
 
-version = '0.1.0'
+version = '0.9.1'
 
 CLASSIFIERS = """\
-Development Status :: 3 - Alpha
+Development Status :: 3 - Beta
 License :: OSI Approved :: GPL
 Programming Language :: Python
 Topic :: Software Development :: Libraries :: Python Modules
@@ -12,13 +11,12 @@ Topic :: Software Development :: Libraries :: Python Modules
 
 setup(name='pymogile',
       version=version,
-      description="pymongile",
+      description="pymogile",
       long_description="""Python MogileFS Client""",
       classifiers=filter(None, map(str.strip, CLASSIFIERS.splitlines())),
       keywords='',
-      author='Chihio Sakatoku',
-      author_email='csakatoku@gmail.com',
-      #url='',
+      author='AloneRoad',
+      author_email='aloneroad@gmail.com',
       license='GPL',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
@@ -28,6 +26,5 @@ setup(name='pymogile',
       ],
       entry_points="""
       # -*- Entry points: -*-
-      """,
-      test_suite='nose.collector'
+      """
       )
