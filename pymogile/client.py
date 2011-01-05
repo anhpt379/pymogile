@@ -8,7 +8,8 @@ This module is a client library for the MogileFS distributed file system
 """
 from pymogile.backend import Backend
 from pymogile.exceptions import MogileFSError
-from pymogile.file import NewHttpFile, ClientHttpFile
+from pymogile.file import NormalHTTPFile, LargeHTTPFile
+
 
 class Client(object):
   def __init__(self, domain, trackers, readonly=False):
@@ -88,9 +89,9 @@ class Client(object):
 
     # TODO
     if largefile:
-      file_class = ClientHttpFile
+      file_class = LargeHTTPFile
     else:
-      file_class = NewHttpFile
+      file_class = NormalHTTPFile
 
     return file_class(mg=self,
                       fid=res['fid'],
@@ -134,10 +135,10 @@ class Client(object):
     paths = self.get_paths(key)
     path = paths[0]
     backup_dests = [(None, p) for p in paths[1:]]
-    return ClientHttpFile(path=path, backup_dests=backup_dests, readonly=1)
+    return LargeHTTPFile(path=path, backup_dests=backup_dests, readonly=1)
 
 
-  def store_file(self, key, fp, cls=None, chunk_size=8192):   #TODO
+  def store_file(self, key, fp, cls=None, chunk_size=8192):
     """
     Wrapper around new_file, print, and close.
 

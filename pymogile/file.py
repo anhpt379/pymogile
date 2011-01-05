@@ -18,7 +18,7 @@ def get_content_length(response):
     return 0
 
 
-class HttpFile(object):
+class HTTPFile(object):
   def __init__(self, mg, fid, key, cls, create_close_arg=None):
     self.mg = mg
     self.fid = fid
@@ -115,12 +115,21 @@ class HttpFile(object):
     raise HTTPError(res.status, res.reason)
 
 
-class ClientHttpFile(HttpFile):
-  def __init__(self, path, backup_dests=None, overwrite=False,
-               mg=None, fid=None, devid=None, cls=None, key=None, 
-               readonly=False, create_close_arg=None, **kwds):
+class LargeHTTPFile(HTTPFile):
+  def __init__(self, 
+               path, 
+               backup_dests=None, 
+               overwrite=False,
+               mg=None, 
+               fid=None, 
+               devid=None, 
+               cls=None, 
+               key=None, 
+               readonly=False, 
+               create_close_arg=None, 
+               **kwds):
 
-    super(ClientHttpFile, self).__init__(mg, fid, key, cls, create_close_arg)
+    super(LargeHTTPFile, self).__init__(mg, fid, key, cls, create_close_arg)
 
     if backup_dests is None:
       backup_dests = []
@@ -242,12 +251,19 @@ class ClientHttpFile(HttpFile):
     return self._pos
 
 
-class NewHttpFile(HttpFile):
-  def __init__(self, path, devid, backup_dests=None,
-               mg=None, fid=None, cls=None, key=None, 
-               create_close_arg=None, **kwds):
+class NormalHTTPFile(HTTPFile):
+  def __init__(self, 
+               path, 
+               devid, 
+               backup_dests=None,
+               mg=None, 
+               fid=None, 
+               cls=None, 
+               key=None, 
+               create_close_arg=None, 
+               **kwds):
 
-    super(NewHttpFile, self).__init__(mg, fid, key, cls, create_close_arg)
+    super(NormalHTTPFile, self).__init__(mg, fid, key, cls, create_close_arg)
 
     if backup_dests is None:
       backup_dests = []

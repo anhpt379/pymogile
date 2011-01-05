@@ -1,8 +1,6 @@
 #! coding: utf-8
 # pylint: disable-msg=W0311
 
-__all__ = ['HTTPError', 'MogileFSError']
-
 class MogileFSError(Exception):
   def __init__(self, errstr, err=None):
     self.errstr = errstr
