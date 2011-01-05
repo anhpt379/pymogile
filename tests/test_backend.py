@@ -9,13 +9,20 @@ class TestBackend(unittest.TestCase):
   def setUp(self):
     self.backend = Backend(['127.0.0.1:7001'])
   
-  def test_do_request_host_not_exist(self):
+  def test_do_request_trackers_not_exist(self):
     backend = Backend(["127.0.0.1:7011", "127.0.0.1:7012"])
     try:
       backend.do_request("get_domains")
     except MogileFSError:
       pass
     else:
+      assert False
+      
+  def test_do_request_one_tracker_down(self):
+    backend = Backend(["127.0.0.1:7001", "127.0.0.1:7012"])
+    try:
+      backend.do_request("get_domains")
+    except MogileFSError:
       assert False
 
   def test_do_request(self):
@@ -24,7 +31,7 @@ class TestBackend(unittest.TestCase):
   
   def test_do_request_cmd_not_exist(self):
     try:
-      self.backend.do_request("spameggham")
+      self.backend.do_request("asdfkljweioav")
     except MogileFSError:
       pass
     else:

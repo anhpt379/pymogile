@@ -7,8 +7,8 @@ http://search.cpan.org/~dormando/MogileFS-Client/lib/MogileFS/Client.pm
 This module is a client library for the MogileFS distributed file system
 """
 from pymogile.backend import Backend
-from pymogile.exceptions import MogileFSError, MogileFSError
-from pymogile.http import NewHttpFile, ClientHttpFile
+from pymogile.exceptions import MogileFSError
+from pymogile.file import NewHttpFile, ClientHttpFile
 
 class Client(object):
   def __init__(self, domain, trackers, readonly=False):
@@ -24,13 +24,13 @@ class Client(object):
     pass
 
   def add_backend_hook(self):
-    pass
+    raise NotImplementedError()
 
   def errstr(self):
-    pass
+    raise NotImplementedError()
 
   def errcode(self):
-    pass
+    raise NotImplementedError()
 
 
   @property
@@ -70,7 +70,7 @@ class Client(object):
     if not res:
       return None
 
-    # [ (devid,path), (devid,path), ... ]
+    # [(devid, path), (devid, path),... ]
     dests = []
     # determine old vs. new format to populate destinations
     if 'dev_count' not in res:

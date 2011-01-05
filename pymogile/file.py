@@ -17,6 +17,7 @@ def get_content_length(response):
   except (TypeError, ValueError):
     return 0
 
+
 class HttpFile(object):
   def __init__(self, mg, fid, key, cls, create_close_arg=None):
     self.mg = mg
@@ -240,6 +241,7 @@ class ClientHttpFile(HttpFile):
       return False
     return self._pos
 
+
 class NewHttpFile(HttpFile):
   def __init__(self, path, devid, backup_dests=None,
                mg=None, fid=None, cls=None, key=None, 
@@ -253,6 +255,9 @@ class NewHttpFile(HttpFile):
     self._paths = [(devid, path)] + list(backup_dests)
     self._is_closed = 0
 
+  def paths(self):
+    return self._paths
+  
   def read(self, n= -1):
     return self._fp.read(n)
 

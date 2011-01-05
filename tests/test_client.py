@@ -90,24 +90,12 @@ class TestClient(unittest.TestCase):
     client = Client(TEST_NS, HOSTS)
 
     key = 'test_file_%s_%s' % (random.random(), time.time())
-    try:
-      client.new_file(key, cls='spam')
-    except MogileFSError:
-      pass
-    else:
-      assert False
-
+    self.assertRaises(MogileFSError, client.new_file, key, 'unexisting')
   
   def test_new_file_unexisting_domain(self):
-    client = Client('spamdomain', HOSTS)
-
+    client = Client('unexisting_domain', HOSTS)
     key = 'test_file_%s_%s' % (random.random(), time.time())
-    try:
-      client.new_file(key)
-    except MogileFSError, e:
-      pass
-    else:
-      assert False
+    self.assertRaises(MogileFSError, client.new_file, key)
   
   def test_closed_file(self):
     client = Client(TEST_NS, HOSTS)
@@ -116,33 +104,11 @@ class TestClient(unittest.TestCase):
     fp.write("spam")
     fp.close()
 
-    try:
-      fp.write("egg")
-    except:
-      pass
-    else:
-      assert False, "operation not permitted to closed file"
+    self.assertRaises(ValueError, fp.write, "egg")
+    self.assertRaises(ValueError, fp.read)
+    self.assertRaises(ValueError, fp.seek, 0)
+    self.assertRaises(ValueError, fp.tell)
 
-    try:
-      fp.read()
-    except:
-      pass
-    else:
-      assert False, "operation not permitted to closed file"
-
-    try:
-      fp.seek(0)
-    except:
-      pass
-    else:
-      assert False, "operation not permitted to closed file"
-
-    try:
-      fp.tell()
-    except:
-      pass
-    else:
-      assert False, "operation not permitted to closed file"
   
 #  def test_readonly_file(self):
 #    client = Client(TEST_NS, HOSTS)
@@ -164,11 +130,11 @@ class TestClient(unittest.TestCase):
     fp = client.new_file(key)
     fp.write("SPAM")
     fp.seek(1)
-    assert fp.tell() == 1
+    self.assertEqual(fp.tell(), 1)
+    
     fp.write("p")
     fp.close()
-
-    assert client.get_file_data(key) == "SpAM"
+    self.assertEqual(client.get_file_data(key), "SpAM")
   
   def test_seek_negative(self):
     client = Client(TEST_NS, HOSTS)
@@ -177,11 +143,11 @@ class TestClient(unittest.TestCase):
     fp = client.new_file(key)
     fp.write("SPAM")
     fp.seek(-10)
-    assert fp.tell() == 0
+    self.assertEqual(fp.tell(), 0)
+    
     fp.write("s")
     fp.close()
-
-    assert client.get_file_data(key) == "sPAM"
+    self.assertEqual(client.get_file_data(key), "sPAM")
   
   def test_seek_read(self):
     client = Client(TEST_NS, HOSTS)
@@ -191,28 +157,26 @@ class TestClient(unittest.TestCase):
 
     fp = client.read_file(key)
     fp.seek(1)
-    assert fp.tell() == 1
+    self.assertEqual(fp.tell(), 1)
+    
     content = fp.read(3)
-
     assert content == "123"
-    assert fp.tell() == 4
-  
+    self.assertEqual(fp.tell(), 4)
 
   def test_rename(self): 
     client = Client(TEST_NS, HOSTS)
     key = 'test_file_%s_%s' % (random.random(), time.time())
     client.new_file(key).write(key)
     paths = client.get_paths(key)
-    assert paths
+    self.assertTrue(paths)
 
     newkey = 'test_file2_%s_%s' % (random.random(), time.time())
     client.rename(key, newkey)
     paths = client.get_paths(newkey)
-    assert paths
+    self.assertTrue(paths)
 
     content = client.get_file_data(newkey)
     assert content == key
-  
 
   def test_rename_dupliate_key(self): 
     client = Client(TEST_NS, HOSTS)
@@ -223,7 +187,6 @@ class TestClient(unittest.TestCase):
     client.store_content(key2, key2)
 
     self.assertEqual(client.rename(key1, key2), False)
-  
 
   def test_store_file(self): 
     client = Client(TEST_NS, HOSTS)
@@ -232,11 +195,10 @@ class TestClient(unittest.TestCase):
     data = ''.join(random.choice("0123456789") for _ in xrange(8192 * 2))
     fp = StringIO(data)
     length = client.store_file(key, fp)
-    assert length == len(data)
+    self.assertEqual(length, len(data))
 
     content = client.get_file_data(key)
-    assert content == data
-  
+    self.assertEqual(content, data)
 
   def test_store_content(self): 
     client = Client(TEST_NS, HOSTS)
@@ -244,11 +206,10 @@ class TestClient(unittest.TestCase):
 
     data = ''.join(random.choice("0123456789") for _ in xrange(8192 * 2))
     length = client.store_content(key, data)
-    assert length == len(data)
+    self.assertEqual(length, len(data))
 
     content = client.get_file_data(key)
-    assert content == data
-  
+    self.assertEqual(content, data)
 
   def test_read_file(self): 
     client = Client(TEST_NS, HOSTS)
@@ -256,9 +217,8 @@ class TestClient(unittest.TestCase):
     client.store_content(key, key)
 
     fp = client.read_file(key)
-    assert fp is not None
-    assert key == fp.read()
-
+    self.assertNotEqual(fp, None)
+    self.assertEqual(key, fp.read())
 
   def test_delete(self): 
     client = Client(TEST_NS, HOSTS)
@@ -266,12 +226,11 @@ class TestClient(unittest.TestCase):
 
     client.new_file(key).write("SPAM")
     paths = client.get_paths(key)
-    assert paths
+    self.assertTrue(paths)
 
     client.delete(key)
     paths = client.get_paths(key)
-    assert not paths
-  
+    self.assertFalse(paths)
 
   def test_mkcol(self): 
     client = Client(TEST_NS, HOSTS)
@@ -279,7 +238,7 @@ class TestClient(unittest.TestCase):
       key = 'test_file_%s_%s_%d' % (random.random(), time.time(), x)
       client.new_file(key).write("SPAM%s" % x)
       paths = client.get_paths(key)
-      assert paths
+      self.assertTrue(paths)
 
 
 #  def test_edit_file(self): 
@@ -299,7 +258,6 @@ class TestClient(unittest.TestCase):
 #
 #    assert cl.get_file_data(key) == "sPaM"
   
-
   def test_file_like_object(self): 
     client = Client(TEST_NS, HOSTS)
     key = 'test_file_%s_%s' % (random.random(), time.time())
@@ -309,17 +267,20 @@ class TestClient(unittest.TestCase):
 
     fp.seek(0)
     line = fp.readline()
-    assert line == "spam\n"
+    self.assertEqual(line, "spam\n")
     line = fp.readline()
-    assert line == "egg\n"
+    
+    self.assertEqual(line, "egg\n")
     line = fp.readline()
-    assert line == "ham\n"
+    
+    self.assertEqual(line, "ham\n")
+    
     line = fp.readline()
-    assert line == ''
+    self.assertEqual(line, '')
 
     fp.seek(0)
     lines = fp.readlines()
-    assert lines == ["spam\n", "egg\n", "ham\n"]
+    self.assertEqual(lines, ["spam\n", "egg\n", "ham\n"])
 
     fp.close()
           
