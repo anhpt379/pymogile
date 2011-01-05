@@ -13,8 +13,11 @@ from errno import EINPROGRESS, EISCONN
 
 from pymogile.exceptions import MogileFSError
 
+CONSOLE_HANDLER = logging.StreamHandler()
 
-logger = logging.getLogger('mogilefs.backend')
+LOG = logging.getLOG("MogileFS Backend")
+LOG.setLevel(logging.INFO)
+LOG.addHandler(CONSOLE_HANDLER)
 
 PROTO_TCP = socket.getprotobyname('tcp')
 MSG_NOSIGNAL = 0x4000
@@ -96,7 +99,7 @@ class Backend(object):
     sock = self._sock_cache
     if sock:
       self.run_hook('do_request_start', cmd, self.last_host_connected)
-      logger.debug("SOCK: cached = %r, REQ: %r" % (sock, req))
+      LOG.debug("SOCK: cached = %r, REQ: %r" % (sock, req))
 
       # send FLAG_NOSIGNAL
       try:
@@ -118,7 +121,7 @@ class Backend(object):
         couldn't connect to any mogilefs backends: %s""" % self._hosts)
 
       self.run_hook('do_request_start', cmd, self.last_host_connected)
-      logger.debug("SOCK: %r, REQ: %r" % (sock, req))
+      LOG.debug("SOCK: %r, REQ: %r" % (sock, req))
 
       # send FLAG_NOSIGNAL
       try:
@@ -145,18 +148,18 @@ class Backend(object):
     line = sockfile.readline()
 
     self.run_hook('do_request_finished', cmd, self.last_host_connected)
-    logger.debug('RESPONSE: %r' % line)
+    LOG.debug('RESPONSE: %r' % line)
 
     matcher = OK_RE.match(line)
     if matcher:
       args = _decode_url_string(matcher.group(1))
-      logger.debug("RETURN_VARS: %r" % args)
+      LOG.debug("RETURN_VARS: %r" % args)
       return args
 
     matcher = ERR_RE.match(line)
     if matcher:
       self.lasterr, self.lasterrstr = map(urllib.unquote_plus, matcher.groups())
-      logger.debug("LASTERR: %s %s" % (self.lasterr, self.lasterrstr))
+      LOG.debug("LASTERR: %s %s" % (self.lasterr, self.lasterrstr))
       raise MogileFSError(self.lasterrstr, self.lasterr)
 
     raise MogileFSError('invalid response from server: [%s]' % line)
@@ -171,7 +174,7 @@ class Backend(object):
     # try preferred ips
     if tracker[0] in self._pref_ip:
       prefip = self._pref_ip[tracker[0]]
-      logger.debug("using preferred ip %s over %s" % (tracker[0], prefip))
+      LOG.debug("using preferred ip %s over %s" % (tracker[0], prefip))
       sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, PROTO_TCP)
       prefhost = (prefip, tracker[1])
       if self._connect_sock(sock, prefhost, 0.1):
@@ -179,7 +182,7 @@ class Backend(object):
         # successfully connected so return this socket
         return sock
       else:
-        logger.debug("failed connect to preferred tracker %s" % str(prefhost))
+        LOG.debug("failed connect to preferred tracker %s" % str(prefhost))
         sock.close()
 
     # now try the original ip
@@ -239,7 +242,7 @@ class Backend(object):
       if sock:
         break
       # mark sock as dead
-      logger.debug("marking tracker dead: %s @ %d" % (tracker, now))
+      LOG.debug("marking tracker dead: %s @ %d" % (tracker, now))
       self._host_dead[tracker] = now
     else:
       sock = None
