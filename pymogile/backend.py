@@ -15,7 +15,7 @@ from pymogile.exceptions import MogileFSError
 
 CONSOLE_HANDLER = logging.StreamHandler()
 
-LOG = logging.getLOG("MogileFS Backend")
+LOG = logging.getLogger("MogileFS Backend")
 LOG.setLevel(logging.INFO)
 LOG.addHandler(CONSOLE_HANDLER)
 
