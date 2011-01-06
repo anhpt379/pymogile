@@ -20,7 +20,6 @@ of the specific IOExceptions raised by the filesystem.  And public fields like
 """
 
 import os 
-import sys
 import shutil
 import urlparse
 from os import path as osp
@@ -174,14 +173,6 @@ class Client:
     # Original has list_keys('/') here, but I don't think that's correct...
     return iter( self.list_keys('')[1] )
 
-  def setdefault(self, k, default=None):
-    f = self[k]
-    if f:
-      return f
-    else :
-      self[k] = default
-      return default
-
   def get_file_data(self, key):
     """
     Retrieves the file data associated with ``key``.
@@ -197,35 +188,6 @@ class Client:
         fp.close()
     except IOError, e:
       return self.croak('IO error retrieving %s: %s' % (key, str(e)))
-
-  def set_file_data(self, key, data, cls=None):
-    """
-    Sets the file ``data`` associated with ``key``.
-
-    >>> datastore = _make_test_client()
-    >>> datastore.set_file_data('test/subdir/temp.txt', 'Hello, world')
-    >>> datastore.get_file_data('test/subdir/temp.txt')
-    'Hello, world'
-
-    Repeated calls simply change the contents of the file:
-
-    >>> datastore.set_file_data('test/subdir/temp.txt', 'This is a test')
-    >>> datastore.get_file_data('test/subdir/temp.txt')
-    'This is a test'
-
-    >>> datastore.delete('test/subdir/temp.txt')
-    True
-    >>> datastore.get_file_data('test/subdir/temp.txt')
-
-    """
-    try:
-      fp = self.new_file(key, cls)
-      try:
-        fp.write(data)
-      finally:
-        fp.close()
-    except IOError, e:
-      return self.croak('IO error saving to %s: %s' % (key, str(e)))
 
   def new_file(self, key, cls=None, bytes=0):
     """
@@ -257,6 +219,16 @@ class Client:
     except IOError, e:
       return self.croak('IO error creating file for %s: %s' % (key, str(e)))
 
+    
+  def store_file(self):
+    pass
+  
+  def store_content(self):
+    pass
+  
+  def update_class(self):
+    pass
+
   def delete(self, key):
     """
     Deletes the file associated with ``key``.
@@ -269,24 +241,6 @@ class Client:
         return False
     except (IOError, OSError), e:
       return self.croak('IO error deleting file %s: %s' % (key, str(e)))
-
-  def delete_small(self, key):
-    """
-    Deletes a single-chunk file.  In MogileLocal, there's no distinction
-    between 'small' and 'big' files, so this is exactly the same as
-    `delete`.  However, the real MogileFS system has a distinction between
-    'small' files (those that fit in a single chunk) and 'big' files
-    (those that are split across machines).  Use delete_small, rename_small
-    on normal files, and delete_big, rename_big on those created by
-    send_bigfile.
-    """
-    return self.delete(key)
-
-  def delete_big(self, key):
-    """
-    Deletes a muli-chunk file.
-    """
-    return self.delete(key)
 
   def rename(self, fkey, tkey):
     """
@@ -302,19 +256,7 @@ class Client:
       return self.croak('OS error renaming %s to %s: %s' % 
           (fkey, tkey, str(e)))
 
-  def rename_small(self, fkey, tkey):
-    """
-    Rename a single-chunk file.
-    """
-    return self.rename(fkey, tkey)
-
-  def rename_big(self, fkey, tkey):
-    """
-    Rename all chunks of a multi-chunk file.
-    """
-    return self.rename(fkey, tkey)
-
-  def get_paths(self, key, noverify=0, zone=None, pathcount=2):
+  def get_paths(self, key, noverify=0, zone='alt', pathcount=2):
     """
     Returns the URL for a key, or an empty list of it doesn't exist.
 
@@ -418,48 +360,11 @@ class Client:
     """
     pass
 
-  def replication_wait(self, key, mindevcount, seconds):
-    """
-    No-op for API compatibility.
-    """
-    return False
-
   def sleep(self, seconds):
     """
     No-op for API compatibility.
     """
     pass
-
-  def cat(self, key, fp=sys.stdout, big=False):
-    """
-    Writes the file specified by `key` to the file descriptor `fp` (default
-    of sys.stdout).  `big` should be set to True for multi-chunk files.
-    """
-    if big:
-      for part in self.get_bigfile_iter(key):
-        fp.write(part)
-    else:
-      fp.write(self[key])
-
-  def send_file(self, key, source, cls=None, blocksize=1024*1024):
-    """
-    Sends ``source``, a file-like object or filename, to Mogile, setting it
-    as ``key``.  Other arguments are unused and are for API compatibility.
-
-    >>> datastore = _make_test_client()
-    >>> datastore['copy_from'] = 'Test'
-    >>> datastore.send_file('copy_to', '/var/mogdata/copy_from')
-    True
-    >>> datastore['copy_to']
-    'Test'
-
-    >>> del datastore['copy_to']
-    >>> del datastore['copy_from']
-
-    """
-
-    self._copy_file_or_filename(source, key)
-    return True
   
 
 class Admin:
