@@ -133,6 +133,8 @@ class Client(object):
     (which is called internally to get the URIs to read from).
     """
     paths = self.get_paths(key)
+    if not paths:
+      return None
     path = paths[0]
     backup_dests = [(None, p) for p in paths[1:]]
     return LargeHTTPFile(path=path, backup_dests=backup_dests, readonly=1)
@@ -220,8 +222,10 @@ class Client(object):
     """
     Returns scalarref of file contents in a scalarref.
     Don't use for large data, as it all comes back to you in one string.
-    """
+    """  
     fp = self.read_file(key)
+    if not fp:
+      return None
     try:
       content = fp.read()
       return content
