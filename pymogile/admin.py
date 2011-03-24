@@ -8,7 +8,7 @@ class Admin(object):
   def __init__(self, trackers, readonly=False, timeout=None):
     self.readonly = bool(readonly)
     self.backend = Backend(trackers, timeout)
-    
+
   def replicate_now(self):
     return self.backend.do_request("replicate_now")
 
@@ -18,17 +18,18 @@ class Admin(object):
     else:
       params = None
     res = self.backend.do_request("get_hosts", params)
+    print res
     results = []
-    fields = ["hostid", 
-              "status", 
-              "hostname", 
-              "hostip", 
-              "http_port", 
-              "http_get_port", 
+    fields = ["hostid",
+              "status",
+              "hostname",
+              "hostip",
+              "http_port",
+              "http_get_port",
               "altip altmask"]
     hosts = int(res['hosts']) + 1
     for ct in xrange(1, hosts):
-      results.append(dict([(f, res['host%d_%s' % (ct, f)]) for f in fields]))
+      results.append(dict([(f, res.get('host%d_%s' % (ct, f))) for f in fields]))
     return results
 
   def get_devices(self, devid=None):
@@ -75,11 +76,11 @@ class Admin(object):
     get a dict of the domains we know about in the format of
        {
          "domain_name": {
-           "class_name": mindevcount, 
-           "class_name": mindevcount, 
-           ... 
-                        }, 
-         ... 
+           "class_name": mindevcount,
+           "class_name": mindevcount,
+           ...
+                        },
+         ...
       }
     """
     res = self.backend.do_request('get_domains')
@@ -140,7 +141,7 @@ class Admin(object):
     """
     if self.readonly:
       return False
-    res = self.backend.do_request("delete_class", 
+    res = self.backend.do_request("delete_class",
                                   {'domain': domain, 'class': cls})
     if res['class'] == cls:
       return True
@@ -202,7 +203,7 @@ class Admin(object):
       raise ValueError('argument weight muse be an integer')
     params = {'host': host, 'device': device, 'weight': weight}
     return self.backend.do_request('set_weight', params)
-  
+
   def _get_slave_keys(self):
     res = self.backend.do_request("server_setting", {"key": "slave_keys"})
     if not res:
@@ -212,7 +213,7 @@ class Admin(object):
     slave_keys = {}
     for slave in value.split(','):
       key, weight = (slave.split("=", 1) + [None])[:2]
-      # Weight can be zero, 
+      # Weight can be zero,
       # so don't default to 1 if it's defined and longer than 0 characters.
       try:
         weight = int(weight)
@@ -279,7 +280,7 @@ class Admin(object):
     password = opts.get('password') or password
 
     value = '|'.join([dsn, username, password])
-    res = self.backend.do_request('set_server_setting', 
+    res = self.backend.do_request('set_server_setting',
                                   {'key': 'slave_%s' % key, 'value': value})
 
   def slave_delete(self, key):
@@ -294,7 +295,7 @@ class Admin(object):
                             {key: "slave_%s" % key})
     del slave_keys[key]
     self._set_slave_keys(slave_keys)
-    
+
   def fsck_start(self):
     return self.backend.do_request("fsck_start")
 
@@ -344,8 +345,8 @@ class Admin(object):
   def _modify_class(self, verb, domain, cls, mindevcount, replpolicy=None):
     if self.readonly:
       return False
-    params = {'domain': domain, 
-              'class': cls, 
+    params = {'domain': domain,
+              'class': cls,
               'mindevcount': mindevcount}
     if replpolicy:
       params['replpolicy'] = replpolicy
@@ -362,8 +363,8 @@ class Admin(object):
       return self.backend.do_request("%s_host" % verb, params)
     except MogileFSError:
       return False
-  
-  ## Extra 
+
+  ## Extra
   #
   def get_freespace(self, devid=None):
     """Get the free space for the entire cluster, or a specific node"""
