@@ -45,13 +45,13 @@ class Client(object):
   def new_file(self, key, cls=None, largefile=False, content_length=0,
                create_open_arg=None, create_close_arg=None, opts=None):
     """
-    Start creating a new filehandle with the given key, 
+    Start creating a new filehandle with the given key,
     and option given class and options.
-    
-    Returns a filehandle you should then print to, 
-    and later close to complete the operation. 
-    
-    NOTE: check the return value from close! 
+
+    Returns a filehandle you should then print to,
+    and later close to complete the operation.
+
+    NOTE: check the return value from close!
     If your close didn't succeed, the file didn't get saved!
     """
     self.run_hook('new_file_start', key, cls, opts)
@@ -106,19 +106,19 @@ class Client(object):
 
   def edit_file(self, key, overwrite=False):
     """Edit the file with the the given key.
-    
-    NOTE: edit_file is currently EXPERIMENTAL and not recommended for production use. 
-    MogileFS is primarily designed for storing files for later retrieval, rather than editing. 
+
+    NOTE: edit_file is currently EXPERIMENTAL and not recommended for production use.
+    MogileFS is primarily designed for storing files for later retrieval, rather than editing.
     Use of this function may lead to poor performance and, until it has been proven mature, should be considered to also potentially cause data loss.
 
     NOTE: use of this function requires support for the DAV 'MOVE' verb and partial PUT (i.e. Content-Range in PUT) on the back-end storage servers (e.g. apache with mod_dav).
-    
-    Returns a seekable filehandle you can read/write to. 
+
+    Returns a seekable filehandle you can read/write to.
     Calling this function may invalidate some or all URLs you currently have for this key, so you should call ->get_paths again afterwards if you need them.
-    
+
     On close of the filehandle, the new file contents will replace the previous contents (and again invalidate any existing URLs).
-    
-    By default, the file contents are preserved on open, but you may specify the overwrite option to zero the file first. 
+
+    By default, the file contents are preserved on open, but you may specify the overwrite option to zero the file first.
     The seek position is at the beginning of the file, but you may seek to the end to append.
     """
     raise NotImplementedError()
@@ -126,10 +126,10 @@ class Client(object):
   def read_file(self, key):
     """
     Read the file with the the given key.
-    Returns a seekable filehandle you can read() from. 
+    Returns a seekable filehandle you can read() from.
     Note that you cannot read line by line using <$fh> notation.
-    
-    Takes the same options as get_paths 
+
+    Takes the same options as get_paths
     (which is called internally to get the URIs to read from).
     """
     paths = self.get_paths(key)
@@ -198,8 +198,8 @@ class Client(object):
     return len(content)
 
   def get_paths(self, key, noverify=1, zone='alt', pathcount=2):
-    """ 
-    Given a key, returns an array of all the locations (HTTP URLs) that the file 
+    """
+    Given a key, returns an array of all the locations (HTTP URLs) that the file
     has been replicated to.
     """
     self.run_hook('get_paths_start', key)
@@ -222,7 +222,7 @@ class Client(object):
     """
     Returns scalarref of file contents in a scalarref.
     Don't use for large data, as it all comes back to you in one string.
-    """  
+    """
     fp = self.read_file(key)
     if not fp:
       return None
@@ -233,8 +233,8 @@ class Client(object):
       fp.close()
 
   def delete(self, key):
-    """ 
-    Delete a file from MogileFS 
+    """
+    Delete a file from MogileFS
     """
     try:
       if self.readonly:
@@ -246,7 +246,7 @@ class Client(object):
 
   def rename(self, from_key, to_key):
     """
-    Rename file (key) in MogileFS from oldkey to newkey. 
+    Rename file (key) in MogileFS from oldkey to newkey.
     Returns true on success, failure otherwise
     """
     try:
@@ -263,19 +263,19 @@ class Client(object):
   def list_keys(self, prefix=None, after=None, limit=None):
     """
     Used to get a list of keys matching a certain prefix.
-    
-    $prefix specifies what you want to get a list of. 
-    
-    $after is the item specified as a return value from this function last time 
-          you called it. 
-    
+
+    $prefix specifies what you want to get a list of.
+
+    $after is the item specified as a return value from this function last time
+          you called it.
+
     $limit is optional and defaults to 1000 keys returned.
-    
-    In list context, returns ($after, $keys). 
-    In scalar context, returns arrayref of keys. 
+
+    In list context, returns ($after, $keys).
+    In scalar context, returns arrayref of keys.
     The value $after is to be used as $after when you call this function again.
-    
-    When there are no more keys in the list, 
+
+    When there are no more keys in the list,
     you will get back undef or an empty list
     """
     params = {'domain': self.domain}
@@ -292,18 +292,37 @@ class Client(object):
       results.append(res['key_%d' % x])
     return results
 
+  def keys(self, prefix=None):
+    """
+    Get all keys matching a certain prefix
+    """
+    params = {'domain': self.domain}
+    if prefix:
+      params['prefix'] = prefix
+    results = []
+    while True:
+      res = self.backend.do_request('list_keys', params)
+      for x in res.keys():
+        if x not in ['key_count', 'next_after']:
+          results.append(res[x])
+      if len(res) < 1002:
+        break
+      params['after'] = res['next_after']
+    return list(set(results))
+
+
   def foreach_key(self, *args, **kwds):
     """
     Functional interface/wrapper around list_keys.
 
-    Given some %OPTIONS (currently only one, "prefix"), 
+    Given some %OPTIONS (currently only one, "prefix"),
     calls your callback for each key matching the provided prefix.
     """
     raise NotImplementedError()
 
   def update_class(self, key, new_class):
     """
-    Update the replication class of a pre-existing file, 
+    Update the replication class of a pre-existing file,
     causing the file to become more or less replicated.
     """
     try:
@@ -330,10 +349,10 @@ class Client(object):
 
   def set_pref_ip(self, *ips):
     """
-    Weird option for old, weird network architecture.  
-    Sets a mapping table of preferred alternate IPs, if reachable.  
-    For instance, if trying to connect to 10.0.0.2 in the above example, 
-    the module would instead try to connect to 10.2.0.2 quickly first, 
+    Weird option for old, weird network architecture.
+    Sets a mapping table of preferred alternate IPs, if reachable.
+    For instance, if trying to connect to 10.0.0.2 in the above example,
+    the module would instead try to connect to 10.2.0.2 quickly first,
     then then fall back to 10.0.0.2 if 10.2.0.2 wasn't reachable.
     expects as argument a tuple of ("standard-ip", "preferred-ip")
     """
