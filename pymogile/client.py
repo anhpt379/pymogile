@@ -162,6 +162,11 @@ class Client(object):
 
     try:
       new_file = self.new_file(key, cls)
+    except MogileFSError:
+      fp.close()
+      return False
+    
+    try:
       _bytes = 0
       while True:
         buf = fp.read(chunk_size)
