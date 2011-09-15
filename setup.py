@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
-version = '0.9.1'
+version = '2.0'
 
 CLASSIFIERS = """\
-Development Status :: 3 - Beta
+Development Status :: 4 - Beta
 License :: OSI Approved :: GPL
 Programming Language :: Python
 Topic :: Software Development :: Libraries :: Python Modules
