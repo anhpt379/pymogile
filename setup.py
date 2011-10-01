@@ -1,24 +1,24 @@
 from setuptools import setup, find_packages
 
-version = '2.0'
-
-CLASSIFIERS = """\
-Development Status :: 4 - Beta
-License :: OSI Approved :: GPL
-Programming Language :: Python
-Topic :: Software Development :: Libraries :: Python Modules
-"""
-
-setup(name='pymogile',
-      version=version,
-      description="pymogile",
-      long_description="""Python MogileFS Client""",
-      classifiers=filter(None, map(str.strip, CLASSIFIERS.splitlines())),
-      keywords='',
-      author='AloneRoad',
-      author_email='aloneroad@gmail.com',
-      license='GPL',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
-      include_package_data=True,
-      zip_safe=False
-      )
+setup(
+    name='pymogile',
+    version='2.0.2',
+    description="pymogile",
+    long_description="""Python MogileFS Client""",
+    classifiers=(
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+    ),
+    author='AloneRoad',
+    author_email='aloneroad@gmail.com',
+    maintainer='stefanfoulis',
+    maintainer_email='stefan.foulis@gmail.com',
+    license='GPL',
+    packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+    include_package_data=True,
+    zip_safe=False
+)
