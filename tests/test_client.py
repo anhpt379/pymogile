@@ -257,6 +257,22 @@ class TestClient(unittest.TestCase):
     fp.close()
 
     self.assertEqual("sPaM", cl.get_file_data(key))
+
+  def test_append_file(self):
+    cl = Client(TEST_NS, HOSTS)
+    key = 'test_file_%s_%s' % (random.random(), time.time())
+
+    cl.store_content(key, "SPAM")
+    self.assertTrue(cl.get_paths(key))
+    self.assertEqual("SPAM", cl.get_file_data(key))
+
+    fp = cl.edit_file(key)
+    self.assertTrue(fp)
+    fp.seek(4)
+    fp.write("HamEggs")
+    fp.close()
+
+    self.assertEqual("SPAMHamEggs", cl.get_file_data(key))
   
   def test_file_like_object(self): 
     client = Client(TEST_NS, HOSTS)
