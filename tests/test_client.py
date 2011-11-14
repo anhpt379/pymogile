@@ -241,22 +241,22 @@ class TestClient(unittest.TestCase):
       self.assertTrue(paths)
 
 
-#  def test_edit_file(self): 
-#    cl = Client(TEST_NS, HOSTS)
-#    key = 'test_file_%s_%s' % (random.random(), time.time())
-#
-#    cl.store_content(key, "SPAM")
-#    assert cl.get_paths(key)
-#    assert cl.get_file_data(key) == "SPAM"
-#
-#    fp = cl.edit_file(key)
-#    assert fp
-#    fp.write("s")
-#    fp.seek(2)
-#    fp.write("a")
-#    fp.close()
-#
-#    assert cl.get_file_data(key) == "sPaM"
+  def test_edit_file(self):
+    cl = Client(TEST_NS, HOSTS)
+    key = 'test_file_%s_%s' % (random.random(), time.time())
+
+    cl.store_content(key, "SPAM")
+    self.assertTrue(cl.get_paths(key))
+    self.assertEqual("SPAM", cl.get_file_data(key))
+
+    fp = cl.edit_file(key)
+    self.assertTrue(fp)
+    fp.write("s")
+    fp.seek(2)
+    fp.write("a")
+    fp.close()
+
+    self.assertEqual("sPaM", cl.get_file_data(key))
   
   def test_file_like_object(self): 
     client = Client(TEST_NS, HOSTS)

@@ -127,6 +127,7 @@ class LargeHTTPFile(HTTPFile):
                key=None, 
                readonly=False, 
                create_close_arg=None, 
+               mutate_file=False,
                **kwds):
 
     super(LargeHTTPFile, self).__init__(mg, fid, key, cls, create_close_arg)
@@ -161,6 +162,8 @@ class LargeHTTPFile(HTTPFile):
     self._is_closed = 0
     self._pos = 0
     self._eof = 0
+
+    self.mutate_file = mutate_file
 
   def read(self, n= -1):
     if self._is_closed:
@@ -226,7 +229,7 @@ class LargeHTTPFile(HTTPFile):
                    'fid': self.fid,
                    'devid': self.devid,
                    'domain': self.mg.domain,
-                   'size': self.length,
+                   'size': self.mutate_file and -1 or self.length,
                    'key': self.key,
                    'path': self.path,
                  }
