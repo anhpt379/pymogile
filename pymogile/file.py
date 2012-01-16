@@ -99,7 +99,7 @@ class HTTPFile(object):
     conn = connection(url.netloc)
     target = urlparse.urlunsplit((None, None, url.path, url.query, url.fragment))
     conn.request(method, target, *args, **kwds)
-    res = conn.getresponse()
+    res = conn.getresponse(buffering=True)
     if is_success(res):
       return res
 
