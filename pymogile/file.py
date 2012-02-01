@@ -98,6 +98,10 @@ class HTTPFile(object):
 
     conn = connection(url.netloc)
     target = urlparse.urlunsplit((None, None, url.path, url.query, url.fragment))
+    if kwds.get('stream'):
+      conn.connect()
+      conn.putrequest(method, url.path)
+      return conn
     conn.request(method, target, *args, **kwds)
     res = conn.getresponse(buffering=True)
     if is_success(res):
@@ -327,3 +331,72 @@ class NormalHTTPFile(HTTPFile):
 
   def tell(self):
     return self._fp.tell()
+
+class StreamingHTTPFile(HTTPFile):
+  def __init__(self,
+               path,
+               devid,
+               backup_dests=None,
+               mg=None,
+               fid=None,
+               cls=None,
+               key=None,
+               create_close_arg=None,
+               content_length=0,
+               **kwds):
+
+    super(StreamingHTTPFile, self).__init__(mg, fid, key, cls, create_close_arg)
+
+    if backup_dests is None:
+      backup_dests = []
+    self._paths = [(devid, path)] + list(backup_dests)
+    self._is_closed = 0
+
+    self.size = content_length
+
+    for tried_devid, tried_path in self._paths:
+      try:
+        try:
+          created = self._makedirs(tried_path)
+        except:
+          pass
+        self.conn = self._request(tried_path, "PUT", stream=True)
+        self.conn.putheader('Content-Length', self.size)
+        self.conn.endheaders()
+        self.devid = tried_devid
+        self.path = tried_path
+        break
+      except HTTPError, e:
+        continue
+    else:
+      raise NotImplementedError()
+
+  def paths(self):
+    return self._paths
+
+  def write(self, content):
+    self.conn.send(content)
+
+  def close(self):
+    if not self._is_closed:
+      self._is_closed = True
+
+      res = self.conn.getresponse()
+      if not is_success(res):
+        raise HTTPError(res.status, res.reason)
+
+      params = {
+                 'fid'   : self.fid,
+                 'domain': self.mg.domain,
+                 'key'   : self.key,
+                 'path'  : self.path,
+                 'devid' : self.devid,
+                 'size'  : self.size
+               }
+      if self.create_close_arg:
+        params.update(self.create_close_arg)
+      try:
+        self.mg.backend.do_request('create_close', params)
+      except MogileFSError, e:
+        if e.err != 'empty_file':
+          raise
