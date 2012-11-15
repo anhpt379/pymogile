@@ -1,5 +1,6 @@
 #! coding: utf-8
 # pylint: disable-msg=W0311, E1101, E1103
+import put
 import logging
 import httplib
 import urlparse
@@ -173,7 +174,7 @@ class LargeHTTPFile(HTTPFile):
     if n == 0:
       return ''
     elif n > 0:
-      headers['Range'] = 'bytes=%d-%d' % (self._pos, self._pos + n - 1)
+      headers['Content-Range'] = 'bytes=%d-%d' % (self._pos, self._pos + n - 1)
     else:
       # if n is negative, then read whole content
       pass
@@ -210,7 +211,8 @@ class LargeHTTPFile(HTTPFile):
     length = len(content)
     start = self._pos
     end = self._pos + length - 1
-    headers = {'Content-Range': "bytes %d-%d/*" % (start, end)}
+    headers = {'Content-Range': "bytes %d-%d/*" % (start, end),
+               'Content-Length': length}
     self._request(self._path, "PUT", content, headers=headers)
 
     if self._pos + length > self.length:
@@ -290,12 +292,14 @@ class NormalHTTPFile(HTTPFile):
     if not self._is_closed:
       self._is_closed = True
 
-      content = self._fp.getvalue()
-      self._fp.close()
+#      content = self._fp.getvalue()
+#      self._fp.close()
 
       for tried_devid, tried_path in self._paths:
         try:
-          self._request(tried_path, "PUT", content)
+#          self._request(tried_path, "PUT", content)
+          self._fp.seek(0)
+          put.putfile(self._fp, tried_path)
           devid = tried_devid
           path = tried_path
           break
@@ -305,6 +309,9 @@ class NormalHTTPFile(HTTPFile):
         devid = None
         path = None
 
+      self._fp.seek(0, 2)
+      size = self._fp.tell()
+      self._fp.close()
       if devid:
         params = {
                    'fid'   : self.fid,
@@ -312,7 +319,7 @@ class NormalHTTPFile(HTTPFile):
                    'key'   : self.key,
                    'path'  : path,
                    'devid' : devid,
-                   'size'  : len(content)
+                   'size'  : size
                  }
         if self.create_close_arg:
           params.update(self.create_close_arg)

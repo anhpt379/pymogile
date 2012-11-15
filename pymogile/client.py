@@ -214,12 +214,10 @@ class Client(object):
               'noverify': noverify and 1 or 0,
               'zone': zone,
               'pathcount': pathcount}
-    try:
-      res = self.backend.do_request('get_paths', params)
-      paths = [res["path%d" % x] for x in xrange(1, int(res["paths"]) + 1)]
-    except (MogileFSError, MogileFSError):
-      paths = []
-
+    
+    res = self.backend.do_request('get_paths', params)
+    paths = [res["path%d" % x] for x in xrange(1, int(res["paths"]) + 1)]
+    
     self.run_hook('get_paths_end', key)
     return paths
 
