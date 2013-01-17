@@ -8,7 +8,9 @@ This module is a client library for the MogileFS distributed file system
 """
 from pymogile.backend import Backend
 from pymogile.exceptions import MogileFSError
-from pymogile.file import NormalHTTPFile, LargeHTTPFile
+from pymogile.file import NormalHTTPFile, LargeHTTPFile, StreamingHTTPFile
+from urlparse import urlparse
+import httplib
 
 
 class Client(object):
@@ -43,7 +45,8 @@ class Client(object):
     return self.backend.last_host_connected
 
   def new_file(self, key, cls=None, largefile=False, content_length=0,
-               create_open_arg=None, create_close_arg=None, opts=None):
+               create_open_arg=None, create_close_arg=None, opts=None,
+               streaming=False):
     """
     Start creating a new filehandle with the given key,
     and option given class and options.
@@ -90,6 +93,8 @@ class Client(object):
     # TODO
     if largefile:
       file_class = LargeHTTPFile
+    elif streaming:
+      file_class = StreamingHTTPFile
     else:
       file_class = NormalHTTPFile
 
@@ -121,7 +126,31 @@ class Client(object):
     By default, the file contents are preserved on open, but you may specify the overwrite option to zero the file first.
     The seek position is at the beginning of the file, but you may seek to the end to append.
     """
-    raise NotImplementedError()
+    params = {'domain': self.domain,
+              'key': key}
+    res = self.backend.do_request('edit_file', params)
+    if not res:
+      return None
+    # {'newpath': 'http://.../0000000594.fid', 'devid': '1', 'oldpath': 'http://.../0000000593.fid', 'fid': '594', 'class': '0'}
+
+    bits = urlparse(res['oldpath'])
+
+    c = httplib.HTTPConnection(bits.netloc)
+    c.request('MOVE', bits.path, headers={'Destination': res['newpath']})
+    cres = c.getresponse()
+    if cres.status != 201:
+      return None
+
+    main_devid, main_path, cls = res['devid'], res['newpath'], res['class']
+
+    return LargeHTTPFile(mg=self,
+                         fid=res['fid'],
+                         path=main_path,
+                         devid=main_devid,
+                         cls=cls,
+                         key=key,
+                         overwrite=overwrite,
+                         mutate_file=True)
 
   def read_file(self, key):
     """
