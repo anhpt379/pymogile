@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pymogile',
-    version='2.0.2',
+    version='2.1.0',
     description="pymogile",
     long_description="""Python MogileFS Client""",
     classifiers=(
