@@ -281,19 +281,16 @@ class Client(object):
         """
         Used to get a list of keys matching a certain prefix.
 
-        $prefix specifies what you want to get a list of.
+        $prefix specifies what you want to get a list of.  $after is the item
+        specified as a return value from this function last time you called
+        it. `$limit` is optional and defaults to 1000 keys returned.
 
-        $after is the item specified as a return value from this function last time
-            you called it.
+        In list context, returns ($after, $keys).  In scalar context, returns
+        arrayref of keys.  The value $after is to be used as $after when you
+        call this function again.
 
-        $limit is optional and defaults to 1000 keys returned.
-
-        In list context, returns ($after, $keys).
-        In scalar context, returns arrayref of keys.
-        The value $after is to be used as $after when you call this function again.
-
-        When there are no more keys in the list,
-        you will get back undef or an empty list
+        When there are no more keys in the list, you will get back undef or
+        an empty list.
         """
         params = {'domain': self.domain}
         if prefix:
