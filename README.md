@@ -1,35 +1,40 @@
-MogileFS client library for Python
-(based on python-mogilefs-client written by Chihio Sakatoku)
+# MogileFS client library for Python
 
-1. Connect to MogileFS
+## Connect to MogileFS
 
+```python
 >>> from pymogile import Client, MogileFSError
 >>> datastore = Client(domain='test', trackers=['127.0.0.1:7001'])
+```
 
+## New file
 
-2. New file
-
+```python
 >>> fp = datastore.new_file('foobar.txt')
 >>> fp.write('foo')
 >>> fp.close()
+```
 
+## Get paths
 
-3. Get paths
-
+```python
 >>> datastore.get_paths('foobar.txt')
 ['http://127.0.0.1:7500/dev4/0/000/251/0000251237.fid', 'http://127.0.0.1:7500/dev6/0/000/251/0000251237.fid']
 >>> print datastore.get_paths('404.txt')
 []
+```
 
-4. Get file data
+## Get file data
 
+```python
 >>> datastore.get_file_data('404.txt')
 >>> datastore.get_file_data('foobar.txt')
 'foo'
+```
 
+## Rename file
 
-5. Rename file
-
+```python
 >>> datastore.rename('404.txt', 'test.txt')
 False
 >>> datastore.rename('foobar.txt', 'foo.txt')
@@ -38,15 +43,14 @@ True
 >>> datastore.get_file_data('test.txt')
 >>> datastore.get_file_data('foo.txt')
 'foo'
+```
 
+## Remove file
 
-6. Remove file
-
+```python
 >>> datastore.delete('foobar.txt')
 False
 >>> datastore.delete('foo.txt')
 True
 >>> datastore.get_file_data('foo.txt')
-
-
-
+```
