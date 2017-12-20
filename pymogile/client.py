@@ -1,7 +1,7 @@
 #! coding: utf-8
 """
-implement from description of MogileFS-Client version 1.13
-http://search.cpan.org/~dormando/MogileFS-Client/lib/MogileFS/Client.pm
+Implement from the code in perl-MogileFS-Client
+https://github.com/mogilefs/perl-MogileFS-Client/blob/master/lib/MogileFS/Client.pm
 
 This module is a client library for the MogileFS distributed file system
 """
@@ -276,6 +276,25 @@ class Client(object):
             return True
         except MogileFSError:
             return False
+
+    def file_debug(self, **kwargs):
+        """
+        Thoroughly search for any database notes about a particular fid.
+        Searchable by raw fid, or by domain and key. **Use sparingly**.
+        Command hits the master database numerous times, and if you're using
+        it in production something is likely very wrong.
+
+        To be used with troubleshooting broken/odd files and errors from
+        mogilefsd.
+        """
+        if 'key' not in kwargs and 'fid' not in kwargs:
+            raise TypeError('file_debug() missing 1 required '
+                            'positional argument: fid/key')
+        params = {
+            'domain': kwargs.get('domain', self.domain)
+        }
+        params.update(kwargs)
+        return self.backend.do_request('file_debug', params)
 
     def file_info(self, key, devices=False):
         """
