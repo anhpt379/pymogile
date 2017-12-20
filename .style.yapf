@@ -1,0 +1,5 @@
+[style]
+based_on_style = pep8
+spaces_before_comment = 4
+join_multiple_lines = False
+dedent_closing_brackets = True
