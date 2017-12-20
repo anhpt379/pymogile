@@ -18,7 +18,6 @@ class Admin(object):
         else:
             params = None
         res = self.backend.do_request("get_hosts", params)
-        print res
         results = []
         fields = [
             "hostid", "status", "hostname", "hostip", "http_port",
