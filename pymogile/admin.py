@@ -381,7 +381,11 @@ class Admin(object):
     #
     def get_freespace(self, devid=None):
         """Get the free space for the entire cluster, or a specific node"""
-        return sum([x['mb_free'] for x in self.get_devices(devid)])
+        devices = self.get_devices(devid)
+        devices = filter(lambda x: x['status'] in ['alive', 'drain'], devices)
+        total = sum(d['mb_total'] for d in devices)
+        used = sum(d['mb_used'] for d in devices)
+        return total - used
 
     def get_stats(self):
         params = {'all': 1}
