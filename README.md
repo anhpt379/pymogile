@@ -32,6 +32,26 @@
 'foo'
 ```
 
+## File info
+
+```python
+>>> datastore.file_info('foobar.txt')
+{'class': 'default',
+ 'devcount': '2',
+ 'domain': 'test',
+ 'fid': '0000251237',
+ 'key': 'foobar.txt',
+ 'length': 3}
+>>> datastore.file_info('foobar.txt', devices=True)
+{'class': 'default',
+ 'devcount': '2',
+ 'devids': ['4', '6'],
+ 'domain': 'test',
+ 'fid': '0000251237',
+ 'key': 'foobar.txt',
+ 'length': 3}
+```
+
 ## Rename file
 
 ```python
