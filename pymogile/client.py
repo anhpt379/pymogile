@@ -277,6 +277,28 @@ class Client(object):
         except MogileFSError:
             return False
 
+    def file_info(self, key, devices=False):
+        """
+        Used to return metadata about a file. Returns the domain, class,
+        expected length, devcount, etc. Optionally device ids (not paths)
+        can be returned as well.
+
+        Should be used for informational purposes, and not usually for
+        dynamically serving files.
+        """
+        params = {
+            'domain': self.domain,
+            'key': key
+        }
+        if devices:
+            params['devices'] = True
+        info = self.backend.do_request('file_info', params)
+        info['devcount'] = int(info['devcount'])
+        info['length'] = int(info['length'])
+        if 'devids' in info:
+            info['devids'] = info['devids'].split(',')
+        return info
+
     def list_keys(self, prefix=None, after=None, limit=None):
         """
         Used to get a list of keys matching a certain prefix.
