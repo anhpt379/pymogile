@@ -1,13 +1,21 @@
 # MogileFS client library for Python
 
-## Connect to MogileFS
+## Installation
+
+```bash
+$ pip install pymogile
+```
+
+## Examples
+
+### Connect to MogileFS
 
 ```python
 >>> from pymogile import Client, MogileFSError
 >>> datastore = Client(domain='test', trackers=['127.0.0.1:7001'])
 ```
 
-## New file
+### New file
 
 ```python
 >>> fp = datastore.new_file('foobar.txt')
@@ -15,7 +23,7 @@
 >>> fp.close()
 ```
 
-## Get paths
+### Get paths
 
 ```python
 >>> datastore.get_paths('foobar.txt')
@@ -24,7 +32,7 @@
 []
 ```
 
-## Get file data
+### Get file data
 
 ```python
 >>> datastore.get_file_data('404.txt')
@@ -32,7 +40,7 @@
 'foo'
 ```
 
-## File info
+### File info
 
 ```python
 >>> datastore.file_info('foobar.txt')
@@ -52,7 +60,7 @@
  'length': 3}
 ```
 
-## Rename file
+### Rename file
 
 ```python
 >>> datastore.rename('404.txt', 'test.txt')
@@ -65,7 +73,7 @@ True
 'foo'
 ```
 
-## Remove file
+### Remove file
 
 ```python
 >>> datastore.delete('foobar.txt')
